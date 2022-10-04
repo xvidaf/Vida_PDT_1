@@ -10,7 +10,7 @@ import time
 def prepareAuthors(json_file):
     start = time.time()
     # Needs id otherwise returns bad int, pandas bug ?
-    timefile = open('../TimeLogs/createImportFilesAuthorsTime.csv', 'w')
+    timefile = open('./TimeLogs/createImportFilesAuthorsTime.csv', 'w')
     timewriter = csv.writer(timefile, delimiter=';', quoting=csv.QUOTE_MINIMAL, lineterminator = '\n')
     chunks = pd.read_json(json_file, lines=True, chunksize=10000, dtype=False, encoding='utf-8')
     counter = 1
@@ -47,7 +47,7 @@ def prepareConversations(json_file):
     start = time.time()
     chunks = pd.read_json(json_file, lines=True, chunksize=10000, dtype=False)
     counter = 1
-    timefile = open('../TimeLogs/createImportFilesConversationsTime.csv', 'w')
+    timefile = open('./TimeLogs/createImportFilesConversationsTime.csv', 'w')
     timewriter = csv.writer(timefile, delimiter=';', quoting=csv.QUOTE_MINIMAL, lineterminator = '\n')
     for chunk in chunks:
         smallstart = time.time()
@@ -737,17 +737,17 @@ def insertConversationsHashtags(timewriter, start):
 if __name__ == '__main__':
 
     prepareAuthors("./Twitter Data/authors.jsonl")
-    prepareConversations("./Twitter Data/conversations.jsonl")
-    start = time.time()
-    timefile = open('./TimeLogs/insertTables.csv', 'w')
-    timewriter = csv.writer(timefile, delimiter=';', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
-    insertAuthors(timewriter, start)
-    insertConversations(timewriter, start)
-    insertHashtags(timewriter, start)
-    insertLinks(timewriter, start)
-    insertAnnotations(timewriter, start)
-    insertConversationReferences(timewriter, start)
-    insertContextDomains(timewriter, start)
-    insertContextEntities(timewriter, start)
-    insertContextAnnotations(timewriter, start)
-    insertConversationsHashtags(timewriter, start)
+    #prepareConversations("/Twitter Data/conversations.jsonl")
+    #start = time.time()
+    #timefile = open('./TimeLogs/insertTables.csv', 'w')
+    #timewriter = csv.writer(timefile, delimiter=';', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+    #insertAuthors(timewriter, start)
+    #insertConversations(timewriter, start)
+    #insertHashtags(timewriter, start)
+    #insertLinks(timewriter, start)
+    #insertAnnotations(timewriter, start)
+    #insertConversationReferences(timewriter, start)
+    #insertContextDomains(timewriter, start)
+    #insertContextEntities(timewriter, start)
+    #insertContextAnnotations(timewriter, start)
+    #insertConversationsHashtags(timewriter, start)
