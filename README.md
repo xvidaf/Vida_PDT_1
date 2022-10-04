@@ -2,6 +2,7 @@ PDT Zadanie 1 Filip Vida
 
 The main script is written in python and located in .\src. 
 The folders are pre-created and will hold the respective table .csv files.
+The csv. files containing the runtime of the script are located in .\TimeLogs.
 
 The required libraries are:
   - pandas: for parsing source data.
