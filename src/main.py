@@ -31,10 +31,6 @@ def prepareAuthors(json_file):
         chunk = pd.concat([chunk, rate], axis="columns")
         chunk = chunk[['id', 'name', 'username', 'description', 'followers_count', 'following_count', 'tweet_count',
                        'listed_count']]
-        # print(chunk.to_string())
-        # Works but not optimal
-        # engine = create_engine('postgresql://postgres:neuhadnes3@localhost:5432/postgres')
-        # chunk.to_sql('authors', engine, if_exists='append',index=False)
         chunk.to_csv('Authors/authors' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
         timewriter.writerow(
             [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
@@ -50,12 +46,9 @@ def prepareAuthors(json_file):
 def prepareConversations(json_file):
     start = time.time()
     chunks = pd.read_json(json_file, lines=True, chunksize=10000, dtype=False)
-    #print("readlo to")
     counter = 1
-    #cur.execute("TRUNCATE authors;")
     timefile = open('../TimeLogs/createImportFilesConversationsTime.csv', 'w')
     timewriter = csv.writer(timefile, delimiter=';', quoting=csv.QUOTE_MINIMAL, lineterminator = '\n')
-    #usedIDs = []
     for chunk in chunks:
         smallstart = time.time()
         chunk = chunk.reset_index()
@@ -77,93 +70,57 @@ def prepareConversations(json_file):
         conversations = conversations[['id', 'author_id', 'text', 'possibly_sensitive', 'lang', 'source', 'created_at']]
         conversations = pd.concat([conversations, counts], axis="columns")
         conversations = conversations[['id', 'author_id', 'text', 'possibly_sensitive', 'lang', 'source', 'retweet_count', 'reply_count', 'like_count', 'quote_count', 'created_at']]
-        #print(len(usedIDs))
-        #print(conversations['id'].isin(usedIDs))
         conversations.to_csv('conversations/conversations' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
-        #print(conversations.to_string())
         #Prepare the entities: hashtags, urls and annotations
         entities = chunk['entities'].values.tolist()
         entities = pd.json_normalize(entities)
-        #print(entities.to_string())
         entities = entities[['hashtags', 'urls', 'annotations']]
         entities = pd.concat([entities, conversations['id']], axis="columns")
         entities = pd.concat([entities, chunk['referenced_tweets']], axis="columns")
         entities = pd.concat([entities, chunk['context_annotations']], axis="columns")
-        #print(entities.to_string())
 
         #Prepare the URLS
         urls = entities[['id','urls']]
-        #print(urls.to_string())
         tmp = urls.explode('urls').reset_index(drop=True)
-        #print(tmp.to_string())
         urls = pd.concat([tmp, pd.json_normalize(tmp['urls'])], axis=1).drop('urls', axis=1)
         urls = urls[['id','expanded_url', 'title', 'description']]
         urls = urls[urls['expanded_url'].notna()]
         urls.to_csv('Urls/urls' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
-        #print(urls.to_string())
 
         #Prepare the hashtags
         hashtags = entities[['id', 'hashtags']]
-        # print(urls.to_string())
         tmp = hashtags.explode('hashtags').reset_index(drop=True)
-        # print(tmp.to_string())
         hashtags = pd.concat([tmp, pd.json_normalize(tmp['hashtags'])], axis=1).drop('hashtags', axis=1)
         hashtags = hashtags[['id', 'tag']]
         hashtags = hashtags[hashtags['tag'].notna()]
         hashtags.to_csv('Conversations_hashtags/hashtags' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
         hashtags['tag'].to_csv('Hashtags/just_hashtags' + str(counter) + '.csv', header=True, index=False, sep=';', encoding='utf-8')
-        #print(hashtags.to_string())
 
         #Prepare the annotations
         annotations = entities[['id', 'annotations']]
-        # print(urls.to_string())
         tmp = annotations.explode('annotations').reset_index(drop=True)
-        # print(tmp.to_string())
         annotations = pd.concat([tmp, pd.json_normalize(tmp['annotations'])], axis=1).drop('annotations', axis=1)
         annotations = annotations[['id', 'normalized_text', 'type', 'probability']]
         annotations = annotations[annotations['normalized_text'].notna()]
         annotations.to_csv('Annotations/annotations' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
-        #print(annotations.to_string())
 
         #Prepare the conversation_references
         referenced_tweets = entities[['id', 'referenced_tweets']]
         referenced_tweets = referenced_tweets.rename(columns={'id': "child_id"})
-        #print(referenced_tweets.to_string())
         tmp = referenced_tweets.explode('referenced_tweets').reset_index(drop=True)
-        # print(tmp.to_string())
         referenced_tweets = pd.concat([tmp, pd.json_normalize(tmp['referenced_tweets'])], axis=1).drop('referenced_tweets', axis=1)
         referenced_tweets = referenced_tweets[['child_id', 'id', 'type']]
         referenced_tweets = referenced_tweets[referenced_tweets['type'].notna()]
         referenced_tweets.to_csv('referenced_tweets/referenced_tweets' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
-        #print(referenced_tweets.to_string())
 
         #Prepare the context_annotations
         context_annotations = chunk[['id','context_annotations']]
         tmp = context_annotations.explode('context_annotations').reset_index(drop=True)
-        # print(tmp.to_string())
         context_annotations = pd.concat([tmp, pd.json_normalize(tmp['context_annotations'])], axis=1).drop(
             'context_annotations', axis=1)
-        #print(context_annotations)
-        #context_annotations = context_annotations[['child_id', 'id', 'type']]
-        #context_annotations = context_annotations[context_annotations['type'].notna()]
         context_annotations[context_annotations['domain.id'].notna()][['id','domain.id', 'entity.id']].to_csv('context_annotations/context_annotations' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
         context_annotations[context_annotations['domain.id'].notna()][['domain.id', 'domain.name',  'domain.description']].to_csv('context_domains/context_domains' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
         context_annotations[context_annotations['entity.id'].notna()][['entity.id', 'entity.name',  'entity.description']].to_csv('context_entities/context_entities' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
-        #print(context_annotations.to_string())
-        #entities = pd.DataFrame(entities,
-                            #columns=['annotations', 'cashtags', 'hashtags', 'mentions', 'urls'])
-        #chunk = chunk[['hashtags']]
-        #print(entities.to_string())
-        #print(counter)
-        #buffer = io.StringIO()
-        #conversations.to_csv(buffer, header=False, index=False, sep=';', encoding='utf-8')
-        #conversations.to_csv('./Conversations/conversations'+ str(counter) +'.csv', header=False, index=False, sep=';', encoding='utf-8')
-        #conversations.to_csv('./Urls/urls' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
-        #buffer.seek(0)
-        #print(buffer)
-        #cur.copy_from(buffer, 'conversations', sep=";")
-        #cur.copy_from(open('just_hashtags.csv', 'r', encoding='utf-8'), 'hashtags_temp', sep=";", columns=["tag"])
-        #cur.execute(copy_hashtags)
         """
         with open("conversations.csv", "r", encoding='utf-8') as f:
             with cur.copy("COPY conversations_temp FROM STDIN (DELIMITER ';',FORMAT 'csv')") as copy:
@@ -177,18 +134,14 @@ def prepareConversations(json_file):
         print(counter)
         counter += 1
         timewriter.writerow([str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0], str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
-        #print(str(datetime.now()) +";" + str(dt.timedelta(seconds=time.time() - start)).split(".")[0] + ";" + str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0])
         smallend = time.time()
         print(smallend - smallstart)
-    #cur.execute(copy_conversations)
     end = time.time()
     print(end - start)
 
 
 def insertAuthors(timewriter, start):
-    #start = time.time()
-    # Needs id otherwise returns bad int, pandas bug ?
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
     command = """
         DROP TABLE IF EXISTS authors;
@@ -234,19 +187,14 @@ def insertAuthors(timewriter, start):
     timewriter.writerow(
         [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
          str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
-    # close communication with the PostgreSQL database server
     cur.close()
-    # commit the changes
     conn.commit()
     print("Authors inserted")
 
 
 def insertConversations(timewriter, start):
-    #start = time.time()
-    # print("readlo to")
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
-    # cur.execute("TRUNCATE authors;")
     command = """
         DROP TABLE IF EXISTS conversations;
 
@@ -333,8 +281,7 @@ def insertConversations(timewriter, start):
 
 
 def insertHashtags(timewriter, start):
-    #start = time.time()
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS hashtags;
@@ -387,8 +334,7 @@ def insertHashtags(timewriter, start):
     cur.close()
 
 def insertLinks(timewriter, start):
-    #start = time.time()
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS links;
@@ -446,8 +392,7 @@ def insertLinks(timewriter, start):
     cur.close()
 
 def insertAnnotations(timewriter, start):
-    #start = time.time()
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS annotations;
@@ -500,8 +445,7 @@ def insertAnnotations(timewriter, start):
 
 
 def insertConversationReferences(timewriter, start):
-    #start = time.time()
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS conversation_references;
@@ -557,8 +501,7 @@ def insertConversationReferences(timewriter, start):
 
 
 def insertContextDomains(timewriter, start):
-    #start = time.time()
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS context_domains;
@@ -614,8 +557,7 @@ def insertContextDomains(timewriter, start):
 
 
 def insertContextEntities(timewriter, start):
-    #start = time.time()
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS context_entities;
@@ -670,8 +612,7 @@ def insertContextEntities(timewriter, start):
     cur.close()
 
 def insertContextAnnotations(timewriter, start):
-    #start = time.time()
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS context_annotations;
@@ -732,7 +673,7 @@ def insertContextAnnotations(timewriter, start):
 
 def insertConversationsHashtags(timewriter, start):
     #start = time.time()
-    conn = psycopg.connect("dbname=postgres user=postgres password=neuhadnes3")
+    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS conversation_hashtags;
@@ -792,19 +733,11 @@ def insertConversationsHashtags(timewriter, start):
     conn.commit()
     cur.close()
 
-#TODO Problem when something does not have entities, for example {0:{blabla}, 1: nan}
-#TODO conversation_references pridat constraint az na konci, kedze moze referencovat este nepridane conversations
 
-#Inserting authors: 300 sec give or take
-#Copy into temp table and then into propar one: 40 sec give or take
-#Copy into table without constraints, enforce constraints later: remove duplicates: 10 sec, add PK : 5 sec, seems much better
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    #prepareAuthors("./Twitter Data/authors.jsonl")
-    #prepareConversations("./Twitter Data/conversations.jsonl")
+    prepareAuthors("./Twitter Data/authors.jsonl")
+    prepareConversations("./Twitter Data/conversations.jsonl")
     start = time.time()
     timefile = open('./TimeLogs/insertTables.csv', 'w')
     timewriter = csv.writer(timefile, delimiter=';', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
@@ -818,6 +751,3 @@ if __name__ == '__main__':
     insertContextEntities(timewriter, start)
     insertContextAnnotations(timewriter, start)
     insertConversationsHashtags(timewriter, start)
-
-
-# 370 while always checking constraints afte 10k
