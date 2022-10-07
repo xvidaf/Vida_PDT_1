@@ -32,9 +32,11 @@ def prepareAuthors(json_file):
         chunk = chunk[['id', 'name', 'username', 'description', 'followers_count', 'following_count', 'tweet_count',
                        'listed_count']]
         chunk.to_csv('Authors/authors' + str(counter) + '.csv', header=False, index=False, sep=';', encoding='utf-8')
+        wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+        minutes, seconds = divmod((time.time() - smallstart), 60)
         timewriter.writerow(
-            [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-             str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+            [str(datetime.now()).split(".")[0], str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+             str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
         counter += 1
     end = time.time()
     print(end - start)
@@ -133,7 +135,11 @@ def prepareConversations(json_file):
         """
         print(counter)
         counter += 1
-        timewriter.writerow([str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0], str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+        minutes, seconds = divmod((time.time() - smallstart), 60)
+        timewriter.writerow(
+            [str(datetime.now()).split(".")[0], str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+             str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
         smallend = time.time()
         print(smallend - smallstart)
     end = time.time()
@@ -141,7 +147,7 @@ def prepareConversations(json_file):
 
 
 def insertAuthors(timewriter, start):
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
         DROP TABLE IF EXISTS authors;
@@ -174,9 +180,12 @@ def insertAuthors(timewriter, start):
                     while data := f.read(10000):
                         copy.write(data)
             counter += 1
+            wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+            minutes, seconds = divmod((time.time() - smallstart), 60)
             timewriter.writerow(
-                [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                [str(datetime.now()).split(".")[0],
+                 str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                 str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     except FileNotFoundError :
         print("All author files inserted")
         print(str(time.time() - start))
@@ -184,16 +193,19 @@ def insertAuthors(timewriter, start):
     print("Copy from files complete, deleting duplicates and adding constraints")
     smallstart = time.time()
     cur.execute(authors_add_pk)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
-        [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        [str(datetime.now()).split(".")[0],
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     cur.close()
     conn.commit()
     print("Authors inserted")
 
 
 def insertConversations(timewriter, start):
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
         DROP TABLE IF EXISTS conversations;
@@ -253,9 +265,12 @@ def insertConversations(timewriter, start):
                 with cur.copy("COPY conversations FROM STDIN (DELIMITER ';',FORMAT 'csv')") as copy:
                     while data := f.read(10000):
                         copy.write(data)
+            wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+            minutes, seconds = divmod((time.time() - smallstart), 60)
             timewriter.writerow(
-                [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                [str(datetime.now()).split(".")[0],
+                 str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                 str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
             counter += 1
     except FileNotFoundError :
         print("All conversation files inserted")
@@ -264,9 +279,12 @@ def insertConversations(timewriter, start):
     duplicatestart = time.time()
     smallstart = time.time()
     cur.execute(conversations_remove_duplicate_id)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
-        [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        [str(datetime.now()).split(".")[0],
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     print(str(time.time()- duplicatestart))
     duplicatestart = time.time()
@@ -274,14 +292,17 @@ def insertConversations(timewriter, start):
     #cur.execute(conversations_remove_invalid_foreign_keys)
     cur.execute(conversations_add_pk_if_missing)
     conn.commit()
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
-        [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        [str(datetime.now()).split(".")[0],
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     cur.close()
 
 
 def insertHashtags(timewriter, start):
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS hashtags;
@@ -316,25 +337,29 @@ def insertHashtags(timewriter, start):
                     while data := f.read(10000):
                         copy.write(data)
             counter += 1
+            wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+            minutes, seconds = divmod((time.time() - smallstart), 60)
             timewriter.writerow(
                 [str(datetime.now()).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                 str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                 str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     except FileNotFoundError:
         print("All hashtags files inserted")
         print(str(time.time() - start))
     conn.commit()
     smallstart = time.time()
     cur.execute(hashtags_remove_duplicates)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
         [str(datetime.now()).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     cur.close()
 
 def insertLinks(timewriter, start):
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS links;
@@ -370,29 +395,38 @@ def insertLinks(timewriter, start):
                     while data := f.read(10000):
                         copy.write(data)
             counter += 1
+            wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+            minutes, seconds = divmod((time.time() - smallstart), 60)
             timewriter.writerow(
-                [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                [str(datetime.now()).split(".")[0],
+                 str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                 str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     except FileNotFoundError:
         print("All link files inserted")
         print(str(time.time() - start))
     conn.commit()
     smallstart = time.time()
     cur.execute(links_remove_bad_fk)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
-        [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        [str(datetime.now()).split(".")[0],
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     smallstart = time.time()
     cur.execute(links_remove_long_urls)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
-        [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        [str(datetime.now()).split(".")[0],
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     cur.close()
 
 def insertAnnotations(timewriter, start):
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS annotations;
@@ -428,24 +462,30 @@ def insertAnnotations(timewriter, start):
                     while data := f.read(10000):
                         copy.write(data)
             counter += 1
+            wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+            minutes, seconds = divmod((time.time() - smallstart), 60)
             timewriter.writerow(
-                [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                [str(datetime.now()).split(".")[0],
+                 str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                 str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     except FileNotFoundError:
         print("All annotations files inserted")
         print(str(time.time() - start))
     conn.commit()
     smallstart = time.time()
     cur.execute(annotations_remove_bad_fk)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
-        [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        [str(datetime.now()).split(".")[0],
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     cur.close()
 
 
 def insertConversationReferences(timewriter, start):
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS conversation_references;
@@ -484,24 +524,30 @@ def insertConversationReferences(timewriter, start):
                     while data := f.read(10000):
                         copy.write(data)
             counter += 1
+            wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+            minutes, seconds = divmod((time.time() - smallstart), 60)
             timewriter.writerow(
-                [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                [str(datetime.now()).split(".")[0],
+                 str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                 str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     except FileNotFoundError:
         print("All conversation reference files inserted")
         print(str(time.time() - start))
     conn.commit()
     smallstart = time.time()
     cur.execute(conversation_references_remove_bad_fk)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
-        [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        [str(datetime.now()).split(".")[0],
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     cur.close()
 
 
 def insertContextDomains(timewriter, start):
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS context_domains;
@@ -537,10 +583,12 @@ def insertContextDomains(timewriter, start):
                 with cur.copy("COPY context_domains_temp FROM STDIN (DELIMITER ';',FORMAT 'csv')") as copy:
                     while data := f.read(10000):
                         copy.write(data)
+                        wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+                        minutes, seconds = divmod((time.time() - smallstart), 60)
                         timewriter.writerow(
                             [str(datetime.now()).split(".")[0],
-                             str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                             str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                             str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                             str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
 
             counter += 1
     except FileNotFoundError:
@@ -549,15 +597,18 @@ def insertContextDomains(timewriter, start):
     conn.commit()
     smallstart = time.time()
     cur.execute(domains_remove_duplicates)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
-        [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        [str(datetime.now()).split(".")[0],
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     cur.close()
 
 
 def insertContextEntities(timewriter, start):
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS context_entities;
@@ -581,7 +632,7 @@ def insertContextEntities(timewriter, start):
         SELECT * FROM context_entities_temp
         ON CONFLICT DO NOTHING;
 
-        DROP TABLE IF EXISTS context_entities_temp
+        DROP TABLE IF EXISTS context_entities_temp;
             """
     cur.execute(command)
     counter = 1
@@ -593,10 +644,12 @@ def insertContextEntities(timewriter, start):
                 with cur.copy("COPY context_entities_temp FROM STDIN (DELIMITER ';',FORMAT 'csv')") as copy:
                     while data := f.read(10000):
                         copy.write(data)
+                        wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+                        minutes, seconds = divmod((time.time() - smallstart), 60)
                         timewriter.writerow(
                             [str(datetime.now()).split(".")[0],
-                             str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                             str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                             str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                             str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
 
             counter += 1
     except FileNotFoundError:
@@ -605,14 +658,17 @@ def insertContextEntities(timewriter, start):
     conn.commit()
     smallstart = time.time()
     cur.execute(domains_remove_duplicates)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
-        [str(datetime.now()).split(".")[0], str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+        [str(datetime.now()).split(".")[0],
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     cur.close()
 
 def insertContextAnnotations(timewriter, start):
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS context_annotations;
@@ -653,27 +709,31 @@ def insertContextAnnotations(timewriter, start):
                     while data := f.read(10000):
                         copy.write(data)
             counter += 1
+            wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+            minutes, seconds = divmod((time.time() - smallstart), 60)
             timewriter.writerow(
                 [str(datetime.now()).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                 str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                 str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     except FileNotFoundError:
         print("All context annotations files inserted")
         print(str(time.time() - start))
     conn.commit()
     smallstart = time.time()
     cur.execute(annotations_remove_bad_fk)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
         [str(datetime.now()).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     cur.close()
 
 
 def insertConversationsHashtags(timewriter, start):
     #start = time.time()
-    conn = psycopg.connect("dbname=DBNAME user=DBUSER password=DBPASSWORD")
+    conn = psycopg.connect("dbname=DBNAME user=USER password=PASSWORD")
     cur = conn.cursor()
     command = """
             DROP TABLE IF EXISTS conversation_hashtags;
@@ -716,20 +776,24 @@ def insertConversationsHashtags(timewriter, start):
                     while data := f.read(10000):
                         copy.write(data)
             counter += 1
+            wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+            minutes, seconds = divmod((time.time() - smallstart), 60)
             timewriter.writerow(
                 [str(datetime.now()).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-                 str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+                 str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+                 str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     except FileNotFoundError:
         print("All conversation_hashtag files inserted")
         print(str(time.time() - start))
     conn.commit()
     smallstart = time.time()
     cur.execute(CH_add_fk)
+    wholeminutes, wholeseconds = divmod((time.time() - start), 60)
+    minutes, seconds = divmod((time.time() - smallstart), 60)
     timewriter.writerow(
         [str(datetime.now()).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - start)).split(".")[0],
-         str(dt.timedelta(seconds=time.time() - smallstart)).split(".")[0]])
+         str(str(wholeminutes).split(".")[0] + ":" + str(wholeseconds).split(".")[0]),
+         str(str(minutes).split(".")[0] + ":" + str(seconds).split(".")[0])])
     conn.commit()
     cur.close()
 
@@ -737,17 +801,17 @@ def insertConversationsHashtags(timewriter, start):
 if __name__ == '__main__':
 
     prepareAuthors("./Twitter Data/authors.jsonl")
-    #prepareConversations("/Twitter Data/conversations.jsonl")
-    #start = time.time()
-    #timefile = open('./TimeLogs/insertTables.csv', 'w')
-    #timewriter = csv.writer(timefile, delimiter=';', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
-    #insertAuthors(timewriter, start)
-    #insertConversations(timewriter, start)
-    #insertHashtags(timewriter, start)
-    #insertLinks(timewriter, start)
-    #insertAnnotations(timewriter, start)
-    #insertConversationReferences(timewriter, start)
-    #insertContextDomains(timewriter, start)
-    #insertContextEntities(timewriter, start)
-    #insertContextAnnotations(timewriter, start)
-    #insertConversationsHashtags(timewriter, start)
+    prepareConversations("./Twitter Data/conversations.jsonl")
+    start = time.time()
+    timefile = open('./TimeLogs/insertTables.csv', 'w')
+    timewriter = csv.writer(timefile, delimiter=';', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+    insertAuthors(timewriter, start)
+    insertConversations(timewriter, start)
+    insertHashtags(timewriter, start)
+    insertLinks(timewriter, start)
+    insertAnnotations(timewriter, start)
+    insertConversationReferences(timewriter, start)
+    insertContextDomains(timewriter, start)
+    insertContextEntities(timewriter, start)
+    insertContextAnnotations(timewriter, start)
+    insertConversationsHashtags(timewriter, start)
